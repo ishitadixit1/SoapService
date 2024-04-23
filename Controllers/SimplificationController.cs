@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ServiceReference1;
-//using static SoapService.Models.SimplifyServiceContract;
+using System;
+using System.ServiceModel;
 
 namespace SoapService.Controllers
 {
@@ -9,31 +10,31 @@ namespace SoapService.Controllers
     [ApiController]
     public class SimplificationController : ControllerBase
     {
-        [HttpGet("{firstno:double} + {secondno:double}")]
+        [HttpGet("add")]
         public async Task<double> DoAdditionAsync(double firstno, double secondno)
         {
             InterfaceSimplifier calc = new InterfaceSimplifierClient(InterfaceSimplifierClient.EndpointConfiguration.BasicHttpBinding_InterfaceSimplifier);
             return await calc.DoAdditionAsync(firstno, secondno);
         }
 
-        [HttpGet("{firstno:double} - {secondno:double}")]
+        [HttpGet("subtract")]
         public async Task<double> DoSubtractionAsync(double firstno, double secondno)
         {
             InterfaceSimplifier calc = new InterfaceSimplifierClient(InterfaceSimplifierClient.EndpointConfiguration.BasicHttpBinding_InterfaceSimplifier);
             return await calc.DoSubtractionAsync(firstno, secondno);
         }
 
-        [HttpGet("{firstno:double} * {secondno:double}")]
+        [HttpGet("multiply")]
         public async Task<double> DoMultiplicationAsync(double firstno, double secondno)
         {
             InterfaceSimplifier calc = new InterfaceSimplifierClient(InterfaceSimplifierClient.EndpointConfiguration.BasicHttpBinding_InterfaceSimplifier);
             return await calc.DoMultiplicationAsync(firstno, secondno);
         }
 
-        [HttpGet("{firstno:double} / {secondno:double}")]
-        public async Task<IActionResult> DoDivisionAsync(double firstno, double secondno)
+        [HttpGet("divide")]
+        public async Task<IActionResult> CalculateDivisionAsync(double number1, double number2)
         {
-            if (secondno == 0)
+            if (number2 == 0)
             {
                 return StatusCode(400, "Bad Request: Division by zero is not allowed.");
             }
@@ -41,12 +42,16 @@ namespace SoapService.Controllers
             try
             {
                 InterfaceSimplifier calc = new InterfaceSimplifierClient(InterfaceSimplifierClient.EndpointConfiguration.BasicHttpBinding_InterfaceSimplifier);
-                double result = await calc.DoDivisionAsync(firstno, secondno);
+                double result = await calc.DoDivisionAsync(number1, number2);
                 return Ok(result);
             }
-            catch (Exception ex)
+            catch (DivideByZeroException)
             {
-                return StatusCode(500, "Cannot divide by 0");
+                return StatusCode(400, "Bad Request: Division by zero is not allowed.");
+            }           
+            catch (Exception)
+            {
+                return StatusCode(500, "An unexpected error occurred.");
             }
         }
     }
